@@ -37,4 +37,110 @@ Wikipédia
 
 ### Restrições importantes
 
+## Diagrama de Classes
+classDiagram
+direction LR
+
+class Partida {
+  - estado: EstadoPartida
+  - fase: Fase
+  - perguntas: List<Pergunta>
+  - indiceAtual: int
+  - ajudas: Map<TipoAjuda, Ajuda>
+  - pulosRestantes: int
+  - usados: Set<UUID>
+  - escada: EscadaPremios
+  + iniciar(): void
+  + responder(indice:int): boolean
+  + usarAjuda(tipo:TipoAjuda): boolean
+  + pular(): boolean
+  + parar(): void
+  + avancar(): void
+  + saldoAtual(): BigDecimal
+  + emFinal(): boolean
+  + getPerguntaAtual(): Pergunta
+}
+
+class Jogador {
+  - nome: String
+  + getNome(): String
+}
+
+class Pergunta {
+  - id: UUID
+  - enunciado: String
+  - alternativas: List<Alternativa>
+  - fase: Fase
+}
+
+class Alternativa {
+  - texto: String
+  - correta: boolean
+}
+
+class EscadaPremios {
+  - degraus: List<BigDecimal>
+  + premioNa(indice:int): BigDecimal
+  + valorPararFinal(): BigDecimal
+  + valorErroFinal(): BigDecimal
+}
+
+class Ajuda {
+  <<interface>>
+  + tipo(): TipoAjuda
+  + aplicar(p:Pergunta, visiveis:List<Alternativa>): List<Alternativa>
+  + disponivel(): boolean
+  + consumir(): void
+}
+
+class Universitarios
+class Placas
+class Cartas
+class Pulo
+
+Ajuda <|.. Universitarios
+Ajuda <|.. Placas
+Ajuda <|.. Cartas
+Ajuda <|.. Pulo
+
+class BancoPerguntas {
+  <<interface>>
+  + sortear(fase:Fase, usados:Set<UUID>): Pergunta
+}
+
+Partida "1" --> "1" Jogador
+Partida "1" --> "1" EscadaPremios
+Partida "1" --> "1" BancoPerguntas
+Partida "1" o-- "*" Ajuda : usa
+Partida "1" --> "0..*" Pergunta : atual/selecionadas
+Pergunta "1" *-- "4" Alternativa : compõe
+
+class EstadoPartida {
+  <<enumeration>>
+  PRONTO
+  PERGUNTANDO
+  CHECANDO
+  FINAL
+}
+
+class Fase {
+  <<enumeration>>
+  RODADA1
+  RODADA2
+  RODADA3
+  FINAL
+}
+
+class TipoAjuda {
+  <<enumeration>>
+  UNIVERSITARIOS
+  PLACAS
+  CARTAS
+  PULO
+}
+
+note for Pergunta "Sempre 4 alternativas; exatamente 1 correta."
+note for Partida "Sem ajuda na pergunta final; 'parar' e 'errar' seguem regras da escada."
+
+
 Nenhuma ajuda pode ser usada na Pergunta do Milhão. Nessa hora, o participante escolhe: responder (e arriscar tudo) ou parar e levar R$ 500 mil. Erro na final zera o prêmio. 
