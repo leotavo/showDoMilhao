@@ -40,17 +40,19 @@ Nenhuma ajuda pode ser usada na Pergunta do Milhão. Nessa hora, o participante 
 ### Restrições importantes
 
 ## Diagrama de Classes
+
+```mermaid
 classDiagram
 direction LR
 
 class Partida {
   - estado: EstadoPartida
   - fase: Fase
-  - perguntas: List<Pergunta>
+  - perguntas: List~Pergunta~
   - indiceAtual: int
-  - ajudas: Map<TipoAjuda, Ajuda>
+  - ajudas: Map~TipoAjuda,Ajuda~
   - pulosRestantes: int
-  - usados: Set<UUID>
+  - usados: Set~UUID~
   - escada: EscadaPremios
   + iniciar(): void
   + responder(indice:int): boolean
@@ -71,7 +73,7 @@ class Jogador {
 class Pergunta {
   - id: UUID
   - enunciado: String
-  - alternativas: List<Alternativa>
+  - alternativas: List~Alternativa~
   - fase: Fase
 }
 
@@ -81,7 +83,7 @@ class Alternativa {
 }
 
 class EscadaPremios {
-  - degraus: List<BigDecimal>
+  - degraus: List~BigDecimal~
   + premioNa(indice:int): BigDecimal
   + valorPararFinal(): BigDecimal
   + valorErroFinal(): BigDecimal
@@ -90,7 +92,7 @@ class EscadaPremios {
 class Ajuda {
   <<interface>>
   + tipo(): TipoAjuda
-  + aplicar(p:Pergunta, visiveis:List<Alternativa>): List<Alternativa>
+  + aplicar(p:Pergunta, visiveis:List~Alternativa~): List~Alternativa~
   + disponivel(): boolean
   + consumir(): void
 }
@@ -107,14 +109,14 @@ Ajuda <|.. Pulo
 
 class BancoPerguntas {
   <<interface>>
-  + sortear(fase:Fase, usados:Set<UUID>): Pergunta
+  + sortear(fase:Fase, usados:Set~UUID~): Pergunta
 }
 
 Partida "1" --> "1" Jogador
 Partida "1" --> "1" EscadaPremios
 Partida "1" --> "1" BancoPerguntas
 Partida "1" o-- "*" Ajuda : usa
-Partida "1" --> "0..*" Pergunta : atual/selecionadas
+Partida "1" --> "0..*" Pergunta : selecionadas
 Pergunta "1" *-- "4" Alternativa : compõe
 
 class EstadoPartida {
@@ -141,7 +143,5 @@ class TipoAjuda {
   PULO
 }
 
-note for Pergunta "Sempre 4 alternativas; exatamente 1 correta."
-note for Partida "Sem ajuda na pergunta final; 'parar' e 'errar' seguem regras da escada."
-
-
+note for Pergunta "4 alternativas; 1 correta."
+note for Partida "Sem ajuda na pergunta final."
