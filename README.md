@@ -35,6 +35,8 @@ Wikipédia
 Pulos: pode pular a pergunta (até 3 vezes por partida). 
 Wikipédia
 
+Nenhuma ajuda pode ser usada na Pergunta do Milhão. Nessa hora, o participante escolhe: responder (e arriscar tudo) ou parar e levar R$ 500 mil. Erro na final zera o prêmio. 
+
 ### Restrições importantes
 
 ## Diagrama de Classes
@@ -143,4 +145,3 @@ note for Pergunta "Sempre 4 alternativas; exatamente 1 correta."
 note for Partida "Sem ajuda na pergunta final; 'parar' e 'errar' seguem regras da escada."
 
 
-Nenhuma ajuda pode ser usada na Pergunta do Milhão. Nessa hora, o participante escolhe: responder (e arriscar tudo) ou parar e levar R$ 500 mil. Erro na final zera o prêmio. 
