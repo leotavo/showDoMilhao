@@ -5,10 +5,11 @@
 > só as regras do README permanecem vinculantes. AI-SMOS adotado via retrofit (ADR-0001).
 > Walking Skeleton completo (DB→lógica→UI), jogável via `python -m showdomilhao` (`PYTHONPATH=src`):
 > `Rodada` (5 perguntas + valor por acerto) encadeadas numa `Partida` contínua; Rodada 1 (R$1 mil)
-> e Rodada 2 (R$10 mil) implementadas. Ajuda **Pulos** implementada (até 3/partida, `pular()`
-> compartilha o avanço de pergunta com `responder()` via `_avancar_pergunta()`). Rodada 3/final e
-> as ajudas Universitários/Placas/Cartas ainda não — essas 3 dependem de decisão de design sobre
-> aleatoriedade (`docs/licoes-aprendidas.md`). Regra de erro (metade do prêmio, não zero, mesmo
+> e Rodada 2 (R$10 mil) implementadas. Ajudas **Pulos** (até 3/partida) e **Cartas** (uso único,
+> sorteio uniforme Ás/2/3/Rei — `sortear_carta`/`escolher_eliminados` injetáveis em `Partida` pra
+> testes determinísticos) implementadas. Universitários/Placas ainda não — dependem de decisão de
+> design sobre como simular múltiplas "opiniões" de terceiros (mais complexo que 1 sorteio único).
+> Rodada 3/Pergunta do Milhão também pendentes. Regra de erro (metade do prêmio, não zero, mesmo
 > cruzando rodada) confirmada por evidência primária — ver README. Layout `src/showdomilhao/`
 > (`partida.py` = domínio, `cli.py` = interação) + testes em `tests/`.
 

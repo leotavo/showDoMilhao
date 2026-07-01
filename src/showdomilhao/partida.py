@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass
 
 PREMIO_RODADA_1 = 1000
@@ -5,6 +6,17 @@ PREMIO_RODADA_2 = 10000
 QUANTIDADE_PERGUNTAS_POR_RODADA = 5
 QUANTIDADE_ALTERNATIVAS = 4
 QUANTIDADE_MAXIMA_PULOS = 3
+
+CARTAS = ("Ás", "2", "3", "Rei")
+CARTAS_QUANTIDADE_A_ELIMINAR = {"Ás": 1, "2": 2, "3": 3, "Rei": 0}
+
+
+def _sortear_carta_padrao() -> str:
+    return random.choice(CARTAS)
+
+
+def _escolher_eliminados_padrao(indices_errados: list[int], quantidade: int) -> list[int]:
+    return random.sample(indices_errados, quantidade)
 
 
 @dataclass(frozen=True)
@@ -46,7 +58,12 @@ class Rodada:
 class Partida:
     """Walking skeleton: rodadas encadeadas numa única partida contínua (ADR-0002)."""
 
-    def __init__(self, rodadas: list[Rodada]):
+    def __init__(
+        self,
+        rodadas: list[Rodada],
+        sortear_carta=_sortear_carta_padrao,
+        escolher_eliminados=_escolher_eliminados_padrao,
+    ):
         if not rodadas:
             raise ValueError("Partida exige ao menos 1 rodada.")
         self._rodadas = tuple(rodadas)  # cópia defensiva: imune a mutação externa da lista original
@@ -55,6 +72,9 @@ class Partida:
         self.premio = 0
         self.finalizada = False
         self.pulos_restantes = QUANTIDADE_MAXIMA_PULOS
+        self.cartas_usada = False
+        self._sortear_carta = sortear_carta
+        self._escolher_eliminados = escolher_eliminados
 
     def _rodada_atual(self) -> Rodada:
         return self._rodadas[self._indice_rodada]
@@ -113,3 +133,22 @@ class Partida:
 
         self.pulos_restantes -= 1
         self._avancar_pergunta()
+
+    def usar_cartas(self) -> tuple[str, tuple[int, ...]]:
+        # Uso único por partida: o README não dá uma contagem explícita pra Cartas
+        # (só Pulos tem "até 3 vezes"), tratado como single-use por inferência do
+        # contraste textual — decisão de design registrada em docs/licoes-aprendidas.md.
+        if self.finalizada:
+            raise RuntimeError("Partida já finalizada.")
+        if self.cartas_usada:
+            raise RuntimeError("Ajuda Cartas já foi usada nesta partida.")
+
+        pergunta = self.pergunta_atual()
+        carta = self._sortear_carta()
+        quantidade_a_eliminar = CARTAS_QUANTIDADE_A_ELIMINAR[carta]
+
+        indices_errados = [i for i in range(len(pergunta.alternativas)) if i != pergunta.correta]
+        eliminadas = tuple(self._escolher_eliminados(indices_errados, quantidade_a_eliminar))
+
+        self.cartas_usada = True
+        return carta, eliminadas

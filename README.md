@@ -18,10 +18,12 @@ alargando rodada por rodada (appetite pequeno a cada fatia, HITL antes de alarga
 - [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — Rodada 1 + Rodada 2 jogáveis de
   ponta a ponta pelo terminal, com testes (`tests/test_cli.py`) via injeção de entrada/saída.
 - [x] Ajuda **Pulos** — até 3 por partida, pula a pergunta atual sem ganhar nem perder prêmio.
+- [x] Ajuda **Cartas** — uso único por partida (inferência, README não dá contagem explícita —
+  ver `docs/licoes-aprendidas.md`); sorteio uniforme (25% cada) entre Ás/2/3/Rei, decisão de
+  design registrada por HITL.
 - [ ] Rodada 3 e Pergunta do Milhão.
-- [ ] Ajudas **Universitários**, **Placas** e **Cartas** — adiadas: dependem de uma mecânica de
-  aleatoriedade (como simular a resposta de terceiros) que o README não especifica; decisão de
-  design ainda pendente (ver `docs/licoes-aprendidas.md`).
+- [ ] Ajudas **Universitários** e **Placas** — adiadas: dependem de simular a resposta de
+  terceiros (múltiplas "opiniões", não só 1 sorteio como Cartas); decisão de design pendente.
 
 Rodar o jogo: `PYTHONPATH=src python -m showdomilhao`
 Rodar os testes: `python -m pytest`

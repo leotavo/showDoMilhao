@@ -3,12 +3,20 @@ import sys
 from showdomilhao.partida import PREMIO_RODADA_1, PREMIO_RODADA_2, Partida, Pergunta, Rodada
 
 
-def formatar_pergunta(pergunta: Pergunta) -> str:
+def formatar_pergunta(pergunta: Pergunta, eliminadas: frozenset[int] = frozenset()) -> str:
     linhas = [pergunta.enunciado]
     for indice, alternativa in enumerate(pergunta.alternativas):
         letra = chr(ord("A") + indice)
-        linhas.append(f"{letra}) {alternativa}")
+        sufixo = " (eliminada)" if indice in eliminadas else ""
+        linhas.append(f"{letra}) {alternativa}{sufixo}")
     return "\n".join(linhas)
+
+
+def formatar_resultado_cartas(carta: str, eliminadas: tuple[int, ...]) -> str:
+    if not eliminadas:
+        return f"Você tirou {carta}! Nenhuma alternativa eliminada."
+    letras = ", ".join(chr(ord("A") + i) for i in sorted(eliminadas))
+    return f"Você tirou {carta}! Eliminada(s): {letras}."
 
 
 def formatar_resultado(acertou: bool, premio: int) -> str:
@@ -26,6 +34,9 @@ def interpretar_entrada(texto: str, quantidade_alternativas: int) -> int | str |
     if normalizado in ("pular", "pu"):
         return "pular"
 
+    if normalizado in ("cartas", "ca"):
+        return "cartas"
+
     if len(normalizado) == 1 and normalizado.isalpha():
         indice = ord(normalizado) - ord("a")
         return indice if 0 <= indice < quantidade_alternativas else None
@@ -38,13 +49,16 @@ def interpretar_entrada(texto: str, quantidade_alternativas: int) -> int | str |
 
 
 def jogar(partida: Partida, entrada=input, saida=print) -> None:
+    eliminadas: frozenset[int] = frozenset()
+
     while not partida.finalizada:
         pergunta = partida.pergunta_atual()
-        saida(formatar_pergunta(pergunta))
+        saida(formatar_pergunta(pergunta, eliminadas))
 
         try:
             texto = entrada(
-                f"Responda (A-D), 'parar' ou 'pular' ({partida.pulos_restantes} restantes): "
+                f"Responda (A-D), 'parar', 'pular' ({partida.pulos_restantes} restantes) "
+                f"ou 'cartas': "
             )
         except EOFError:
             saida("Entrada encerrada. Encerrando o jogo.")
@@ -66,10 +80,21 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
                 saida("Sem pulos restantes, responda ou digite 'parar'.")
                 continue
             partida.pular()
+            eliminadas = frozenset()
             saida(f"Pulou! Pulos restantes: {partida.pulos_restantes}")
             continue
 
+        if comando == "cartas":
+            if partida.cartas_usada:
+                saida("Ajuda Cartas já foi usada nesta partida.")
+                continue
+            carta, eliminados = partida.usar_cartas()
+            eliminadas = frozenset(eliminados)
+            saida(formatar_resultado_cartas(carta, eliminados))
+            continue
+
         acertou = partida.responder(comando)
+        eliminadas = frozenset()
         saida(formatar_resultado(acertou, partida.premio))
 
     saida(f"Fim de jogo. Prêmio final: R$ {partida.premio}")

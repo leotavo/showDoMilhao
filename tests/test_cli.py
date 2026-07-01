@@ -50,6 +50,26 @@ def test_formatar_resultado_acerto_e_erro():
     assert "R$ 500" in formatar_resultado(False, 500)
 
 
+def test_formatar_pergunta_sem_eliminadas_nao_marca_nada():
+    pergunta = Pergunta("X", ("A", "B", "C", "D"), correta=0)
+
+    assert "(eliminada)" not in formatar_pergunta(pergunta)
+
+
+def test_formatar_pergunta_marca_alternativas_eliminadas():
+    pergunta = Pergunta(
+        "Qual a capital da França?", ("Londres", "Paris", "Roma", "Berlim"), correta=1
+    )
+
+    texto = formatar_pergunta(pergunta, eliminadas=frozenset({0, 2}))
+    por_letra = {linha[0]: linha for linha in texto.splitlines() if linha[:1] in "ABCD"}
+
+    assert "(eliminada)" in por_letra["A"]
+    assert "(eliminada)" not in por_letra["B"]
+    assert "(eliminada)" in por_letra["C"]
+    assert "(eliminada)" not in por_letra["D"]
+
+
 # --- interpretar_entrada -----------------------------------------------------
 
 
@@ -88,6 +108,12 @@ def test_interpretar_entrada_aceita_pular_case_insensitive():
     assert interpretar_entrada("pular", 4) == "pular"
     assert interpretar_entrada("PULAR", 4) == "pular"
     assert interpretar_entrada("pu", 4) == "pular"
+
+
+def test_interpretar_entrada_aceita_cartas_case_insensitive():
+    assert interpretar_entrada("cartas", 4) == "cartas"
+    assert interpretar_entrada("CARTAS", 4) == "cartas"
+    assert interpretar_entrada("ca", 4) == "cartas"
 
 
 # --- jogar (loop com entrada/saida injetadas, sem tocar input()/print() reais) ---
@@ -184,6 +210,37 @@ def test_jogar_com_pulos_esgotados_trata_como_invalido_sem_crashar():
     assert partida.premio == 2000  # só as 2 respostas certas (D, A) valeram prêmio
     assert partida.pulos_restantes == 0
     assert any("sem pulos" in linha.lower() for linha in linhas)
+
+
+def test_jogar_com_cartas_elimina_alternativas_sem_avancar_pergunta():
+    partida = Partida(
+        [Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)],
+        sortear_carta=lambda: "2",
+        escolher_eliminados=lambda errados, quantidade: errados[:quantidade],
+    )
+    entrada = entrada_fake(["cartas", "A", "parar"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.cartas_usada is True
+    assert partida.finalizada is True
+    assert partida.premio == 1000  # só a resposta certa (A) valeu; a ajuda não mexe no prêmio
+    assert any("(eliminada)" in linha for linha in linhas)
+
+
+def test_jogar_com_cartas_ja_usada_trata_como_invalido_sem_crashar():
+    partida = Partida(
+        [Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)],
+        sortear_carta=lambda: "Rei",
+    )
+    entrada = entrada_fake(["cartas", "cartas", "A", "parar"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert any("já foi usada" in linha.lower() for linha in linhas)
 
 
 def test_jogar_atravessa_rodada_1_para_rodada_2_sem_interrupcao():

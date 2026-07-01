@@ -10,6 +10,14 @@ from showdomilhao.partida import (
 )
 
 
+def sortear_fixo(carta):
+    return lambda: carta
+
+
+def eliminar_primeiros(errados, quantidade):
+    return errados[:quantidade]
+
+
 def perguntas(prefixo="Pergunta"):
     return [
         Pergunta(f"{prefixo} 1", ("A", "B", "C", "D"), correta=0),
@@ -214,6 +222,103 @@ def test_pular_apos_finalizada_levanta_erro():
 
     with pytest.raises(RuntimeError):
         partida.pular()
+
+
+# --- ajuda: Cartas --------------------------------------------------------------
+# Sorteio uniforme (25% cada) aprovado via HITL. Injeção de sortear_carta/
+# escolher_eliminados deixa o comportamento determinístico nos testes.
+
+
+def test_usar_cartas_as_elimina_1_alternativa_errada():
+    partida = Partida(
+        [rodada_1()], sortear_carta=sortear_fixo("Ás"), escolher_eliminados=eliminar_primeiros
+    )
+
+    carta, eliminadas = partida.usar_cartas()
+
+    assert carta == "Ás"
+    assert len(eliminadas) == 1
+    assert partida.pergunta_atual().correta not in eliminadas
+
+
+def test_usar_cartas_2_elimina_2_alternativas_erradas():
+    partida = Partida(
+        [rodada_1()], sortear_carta=sortear_fixo("2"), escolher_eliminados=eliminar_primeiros
+    )
+
+    carta, eliminadas = partida.usar_cartas()
+
+    assert carta == "2"
+    assert len(eliminadas) == 2
+    assert partida.pergunta_atual().correta not in eliminadas
+
+
+def test_usar_cartas_3_elimina_3_alternativas_so_resta_a_correta():
+    partida = Partida(
+        [rodada_1()], sortear_carta=sortear_fixo("3"), escolher_eliminados=eliminar_primeiros
+    )
+
+    carta, eliminadas = partida.usar_cartas()
+
+    assert carta == "3"
+    assert len(eliminadas) == 3
+    assert partida.pergunta_atual().correta not in eliminadas
+
+
+def test_usar_cartas_rei_nao_elimina_nenhuma():
+    partida = Partida([rodada_1()], sortear_carta=sortear_fixo("Rei"))
+
+    carta, eliminadas = partida.usar_cartas()
+
+    assert carta == "Rei"
+    assert eliminadas == ()
+
+
+def test_usar_cartas_nao_altera_premio_nem_avanca_pergunta():
+    partida = Partida([rodada_1()], sortear_carta=sortear_fixo("2"))
+    pergunta_antes = partida.pergunta_atual()
+
+    partida.usar_cartas()
+
+    assert partida.premio == 0
+    assert partida.pergunta_atual() is pergunta_antes
+    assert partida.finalizada is False
+
+
+def test_usar_cartas_so_pode_ser_usada_uma_vez():
+    # Ajuda de uso único por partida — o README não dá uma contagem explícita
+    # pra Cartas (só Pulos tem "até 3 vezes"), então trato como single-use por
+    # inferência do contraste textual; ver docs/licoes-aprendidas.md.
+    partida = Partida([rodada_1()], sortear_carta=sortear_fixo("Rei"))
+    partida.usar_cartas()
+
+    with pytest.raises(RuntimeError):
+        partida.usar_cartas()
+
+
+def test_usar_cartas_apos_finalizada_levanta_erro():
+    partida = Partida([rodada_1()])
+    partida.parar()
+
+    with pytest.raises(RuntimeError):
+        partida.usar_cartas()
+
+
+def test_usar_cartas_distribuicao_padrao_cobre_as_4_cartas():
+    # Smoke test estatístico contra a implementação real (sem RNG injetado) —
+    # só prova que o sorteio não está hardcoded numa carta só. Janela bem larga
+    # (25 a 175 em 400 sorteios, esperado ~100) pra não ser flaky.
+    from collections import Counter
+
+    contagem = Counter()
+    for _ in range(400):
+        partida = Partida([rodada_1()])
+        carta, _ = partida.usar_cartas()
+        contagem[carta] += 1
+
+    assert set(contagem) == {"Ás", "2", "3", "Rei"}
+    for quantidade in contagem.values():
+        assert 25 < quantidade < 175
 
 
 # --- guardas contra uso indevido pós-finalização ----------------------------
