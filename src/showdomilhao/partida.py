@@ -4,6 +4,7 @@ from dataclasses import dataclass
 PREMIO_RODADA_1 = 1000
 PREMIO_RODADA_2 = 10000
 PREMIO_RODADA_3 = 100000
+PREMIO_PERGUNTA_DO_MILHAO = 1_000_000
 QUANTIDADE_PERGUNTAS_POR_RODADA = 5
 QUANTIDADE_ALTERNATIVAS = 4
 QUANTIDADE_MAXIMA_PULOS = 3
@@ -62,12 +63,15 @@ class Partida:
     def __init__(
         self,
         rodadas: list[Rodada],
+        pergunta_final: Pergunta | None = None,
         sortear_carta=_sortear_carta_padrao,
         escolher_eliminados=_escolher_eliminados_padrao,
     ):
         if not rodadas:
             raise ValueError("Partida exige ao menos 1 rodada.")
         self._rodadas = tuple(rodadas)  # cópia defensiva: imune a mutação externa da lista original
+        self._pergunta_final = pergunta_final
+        self.na_pergunta_final = False
         self._indice_rodada = 0
         self._indice_pergunta = 0
         self._acertos_na_rodada = 0  # degrau da escada; pular() NÃO conta aqui
@@ -89,18 +93,22 @@ class Partida:
             self._indice_rodada += 1
             self._acertos_na_rodada = 0  # nova rodada, escada reinicia do degrau 0
             if self._indice_rodada == len(self._rodadas):
-                self.finalizada = True
+                if self._pergunta_final is not None:
+                    self.na_pergunta_final = True
+                else:
+                    self.finalizada = True
 
     def pergunta_atual(self) -> Pergunta:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
+        if self.na_pergunta_final:
+            return self._pergunta_final
         return self._rodada_atual().perguntas[self._indice_pergunta]
 
     def responder(self, indice_alternativa: int) -> bool:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
 
-        rodada = self._rodada_atual()
         pergunta = self.pergunta_atual()
         if not 0 <= indice_alternativa < len(pergunta.alternativas):
             raise ValueError(
@@ -109,6 +117,15 @@ class Partida:
             )
 
         acertou = indice_alternativa == pergunta.correta
+
+        if self.na_pergunta_final:
+            # Exceção explícita à regra normal (README): na Pergunta do Milhão,
+            # acertar vale o prêmio máximo e errar ZERA (não reduz pela metade).
+            self.premio = PREMIO_PERGUNTA_DO_MILHAO if acertou else 0
+            self.finalizada = True
+            return acertou
+
+        rodada = self._rodada_atual()
         if acertou:
             # Escada, não soma cumulativa entre rodadas (confirmado pelo responsável
             # do projeto): o prêmio é o degrau da rodada ATUAL — troca, não soma, o
@@ -140,6 +157,8 @@ class Partida:
     def pular(self) -> None:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
+        if self.na_pergunta_final:
+            raise RuntimeError("Nenhuma ajuda pode ser usada na Pergunta do Milhão.")
         if self.pulos_restantes <= 0:
             raise RuntimeError("Sem pulos restantes.")
 
@@ -152,6 +171,8 @@ class Partida:
         # contraste textual — decisão de design registrada em docs/licoes-aprendidas.md.
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
+        if self.na_pergunta_final:
+            raise RuntimeError("Nenhuma ajuda pode ser usada na Pergunta do Milhão.")
         if self.cartas_usada:
             raise RuntimeError("Ajuda Cartas já foi usada nesta partida.")
 

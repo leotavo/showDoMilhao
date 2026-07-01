@@ -62,11 +62,17 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
         pergunta = partida.pergunta_atual()
         saida(formatar_pergunta(pergunta, eliminadas))
 
-        try:
-            texto = entrada(
+        if partida.na_pergunta_final:
+            saida("Pergunta do Milhão: nenhuma ajuda disponível. Responda e arrisque tudo, ou pare.")
+            prompt = "Responda (A-D) ou digite 'parar': "
+        else:
+            prompt = (
                 f"Responda (A-D), 'parar', 'pular' ({partida.pulos_restantes} restantes) "
                 f"ou 'cartas': "
             )
+
+        try:
+            texto = entrada(prompt)
         except EOFError:
             saida("Entrada encerrada. Encerrando o jogo.")
             partida.parar()
@@ -83,6 +89,9 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
             break
 
         if comando == "pular":
+            if partida.na_pergunta_final:
+                saida("Nenhuma ajuda pode ser usada na Pergunta do Milhão.")
+                continue
             if partida.pulos_restantes <= 0:
                 saida("Sem pulos restantes, responda ou digite 'parar'.")
                 continue
@@ -92,6 +101,9 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
             continue
 
         if comando == "cartas":
+            if partida.na_pergunta_final:
+                saida("Nenhuma ajuda pode ser usada na Pergunta do Milhão.")
+                continue
             if partida.cartas_usada:
                 saida("Ajuda Cartas já foi usada nesta partida.")
                 continue
@@ -201,6 +213,14 @@ def rodadas_padrao() -> list[Rodada]:
     ]
 
 
+def pergunta_do_milhao_padrao() -> Pergunta:
+    return Pergunta(
+        "Qual é o único mamífero capaz de voar de verdade (não apenas planar)?",
+        ("Esquilo-voador", "Morcego", "Falangeiro-do-açúcar", "Colugo"),
+        correta=1,
+    )
+
+
 def main() -> None:
     # Windows costuma abrir stdout/stdin num codepage que não é UTF-8 (ex.: cp1252),
     # o que quebra os acentos do português; forçar UTF-8 evita mojibake no terminal.
@@ -209,4 +229,4 @@ def main() -> None:
     if hasattr(sys.stdin, "reconfigure"):
         sys.stdin.reconfigure(encoding="utf-8")
 
-    jogar(Partida(rodadas_padrao()))
+    jogar(Partida(rodadas_padrao(), pergunta_final=pergunta_do_milhao_padrao()))

@@ -24,9 +24,13 @@ alargando rodada por rodada (appetite pequeno a cada fatia, HITL antes de alarga
 - [x] Ajuda **Cartas** — uso único por partida (inferência, README não dá contagem explícita —
   ver `docs/licoes-aprendidas.md`); sorteio uniforme (25% cada) entre Ás/2/3/Rei, decisão de
   design registrada por HITL.
-- [ ] Pergunta do Milhão (R$ 1.000.000, parar/arriscar tudo, sem ajudas).
+- [x] **Pergunta do Milhão** — 16ª e última pergunta, sem ajudas; acertar dá R$ 1.000.000, errar
+  zera o prêmio (exceção à regra normal de "metade"), parar preserva o prêmio da Rodada 3.
 - [ ] Ajudas **Universitários** e **Placas** — adiadas: dependem de simular a resposta de
   terceiros (múltiplas "opiniões", não só 1 sorteio como Cartas); decisão de design pendente.
+
+Jogo completo: 16 perguntas (3 rodadas de 5 + a do milhão), todas as regras de valores/prêmio
+implementadas. Faltam só as 2 ajudas adiadas.
 
 Rodar o jogo: `PYTHONPATH=src python -m showdomilhao`
 Rodar os testes: `python -m pytest`

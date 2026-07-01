@@ -11,10 +11,14 @@
 > a Rodada 3 dá R$500 mil, igual ao "parar" da Pergunta do Milhão — confirma que é a mesma escada.
 > Ajudas **Pulos** (até 3/partida) e **Cartas** (uso único, sorteio uniforme Ás/2/3/Rei —
 > `sortear_carta`/`escolher_eliminados` injetáveis em `Partida` pra testes determinísticos)
-> implementadas. Universitários/Placas e Pergunta do Milhão ainda pendentes. Regra de erro (metade
-> do que já estava garantido, não zero, mesmo cruzando rodada) confirmada por evidência primária —
-> ver README. Layout `src/showdomilhao/` (`partida.py` = domínio, `cli.py` = interação) + testes
-> em `tests/`.
+> implementadas. **Pergunta do Milhão** implementada (`Partida(rodadas, pergunta_final=...)`,
+> `partida.na_pergunta_final` público pro CLI bloquear ajudas lá): acertar dá R$1.000.000, errar
+> ZERA (exceção à regra de metade), parar preserva o prêmio da última rodada. Jogo completo:
+> 16 perguntas, todas as regras de valor implementadas — só faltam as ajudas Universitários/Placas
+> (decisão de design pendente sobre simular opinião de terceiros). Regra de erro (metade do que já
+> estava garantido, não zero, mesmo cruzando rodada) confirmada por evidência primária — ver
+> README. Layout `src/showdomilhao/` (`partida.py` = domínio, `cli.py` = interação) + testes em
+> `tests/`.
 
 ## Como trabalhar aqui (resumo)
 - **Classifique antes de agir** (S-02) e roteie (S-03). Tarefa trivial → execução expressa, sem cerimônia.

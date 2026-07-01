@@ -1,6 +1,7 @@
 import pytest
 
 from showdomilhao.partida import (
+    PREMIO_PERGUNTA_DO_MILHAO,
     PREMIO_RODADA_1,
     PREMIO_RODADA_2,
     PREMIO_RODADA_3,
@@ -39,6 +40,10 @@ def rodada_2():
 
 def rodada_3():
     return Rodada(tuple(perguntas("R3")), premio_por_acerto=PREMIO_RODADA_3)
+
+
+def pergunta_do_milhao():
+    return Pergunta("A pergunta que vale um milhão", ("A", "B", "C", "D"), correta=0)
 
 
 RESPOSTAS_CORRETAS = [0, 1, 2, 3, 0]
@@ -470,3 +475,84 @@ def test_pergunta_e_imutavel_e_hashable():
         pergunta.alternativas = ("E", "F", "G", "H")
 
     hash(pergunta)  # não deve levantar TypeError
+
+
+# --- Pergunta do Milhão ------------------------------------------------------
+# Regras já 100% confirmadas no README: R$1.000.000 se acertar, R$0 se errar
+# (não metade — exceção explícita à regra normal), R$500 mil se parar (mesmo
+# valor de completar a Rodada 3), nenhuma ajuda pode ser usada.
+
+
+def test_completar_ultima_rodada_com_pergunta_final_nao_finaliza_a_partida():
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)
+
+    assert partida.finalizada is False
+    assert partida.premio == 5 * PREMIO_RODADA_1
+    assert partida.pergunta_atual().enunciado == "A pergunta que vale um milhão"
+
+
+def test_acertar_pergunta_final_da_premio_do_milhao():
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)
+
+    assert partida.responder(0) is True  # correta=0
+
+    assert partida.premio == PREMIO_PERGUNTA_DO_MILHAO
+    assert partida.finalizada is True
+
+
+def test_errar_pergunta_final_zera_o_premio_em_vez_de_reduzir_pela_metade():
+    # Exceção explícita à regra normal (README): "Erro na final zera o prêmio."
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)  # premio = 5000
+
+    assert partida.responder(1) is False  # errada
+
+    assert partida.premio == 0  # não 2500 (metade), como seria numa rodada normal
+    assert partida.finalizada is True
+
+
+def test_parar_na_pergunta_final_preserva_o_premio_da_ultima_rodada():
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)  # premio = 5000
+
+    partida.parar()
+
+    assert partida.premio == 5 * PREMIO_RODADA_1
+    assert partida.finalizada is True
+
+
+def test_pular_na_pergunta_final_levanta_erro():
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)
+
+    with pytest.raises(RuntimeError):
+        partida.pular()
+
+
+def test_usar_cartas_na_pergunta_final_levanta_erro():
+    partida = Partida([rodada_1()], pergunta_final=pergunta_do_milhao())
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)
+
+    with pytest.raises(RuntimeError):
+        partida.usar_cartas()
+
+
+def test_partida_sem_pergunta_final_finaliza_normalmente_apos_ultima_rodada():
+    # Compatibilidade: pergunta_final é opcional (default None), comportamento
+    # anterior preservado pra quem não passar esse parâmetro.
+    partida = Partida([rodada_1()])
+
+    for resposta in RESPOSTAS_CORRETAS:
+        partida.responder(resposta)
+
+    assert partida.finalizada is True
+    assert partida.premio == 5 * PREMIO_RODADA_1

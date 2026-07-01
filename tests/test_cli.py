@@ -287,3 +287,49 @@ def test_jogar_completa_as_3_rodadas_padrao_com_premio_maximo():
 
     assert partida.finalizada is True
     assert partida.premio == 5 * 100_000  # escada da rodada 3 = R$500 mil
+
+
+def test_jogar_acerta_pergunta_final_ganha_o_premio_do_milhao():
+    pergunta_final = Pergunta("A pergunta que vale um milhão", ("A", "B", "C", "D"), correta=0)
+    partida = Partida(
+        [Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)],
+        pergunta_final=pergunta_final,
+    )
+    entrada = entrada_fake(["A", "B", "C", "D", "A", "A"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 1_000_000
+
+
+def test_jogar_erra_pergunta_final_zera_o_premio():
+    pergunta_final = Pergunta("A pergunta que vale um milhão", ("A", "B", "C", "D"), correta=0)
+    partida = Partida(
+        [Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)],
+        pergunta_final=pergunta_final,
+    )
+    entrada = entrada_fake(["A", "B", "C", "D", "A", "B"])  # erra a final (correta é A)
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 0
+
+
+def test_jogar_pular_na_pergunta_final_trata_como_invalido_sem_crashar():
+    pergunta_final = Pergunta("A pergunta que vale um milhão", ("A", "B", "C", "D"), correta=0)
+    partida = Partida(
+        [Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)],
+        pergunta_final=pergunta_final,
+    )
+    entrada = entrada_fake(["A", "B", "C", "D", "A", "pular", "parar"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 5_000  # preservado, veio da última rodada
+    assert any("nenhuma ajuda" in linha.lower() for linha in linhas)
