@@ -1,4 +1,10 @@
-from showdomilhao.cli import formatar_pergunta, formatar_resultado, interpretar_entrada, jogar
+from showdomilhao.cli import (
+    formatar_pergunta,
+    formatar_resultado,
+    interpretar_entrada,
+    jogar,
+    rodadas_padrao,
+)
 from showdomilhao.partida import PREMIO_RODADA_1, Partida, Pergunta, Rodada
 
 
@@ -265,3 +271,19 @@ def test_jogar_atravessa_rodada_1_para_rodada_2_sem_interrupcao():
     assert partida.finalizada is True
     assert partida.premio == 5_000 + 5 * 10_000
     assert any("Pergunta R2-1" in linha for linha in linhas)  # provou que cruzou a fronteira
+
+
+def test_jogar_completa_as_3_rodadas_padrao_com_premio_maximo():
+    partida = Partida(rodadas_padrao())
+    respostas_corretas = [
+        "B", "B", "C", "C", "B",  # Rodada 1
+        "B", "D", "B", "B", "C",  # Rodada 2
+        "B", "C", "B", "C", "C",  # Rodada 3
+    ]
+    entrada = entrada_fake(respostas_corretas)
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 5_000 + 5 * 10_000 + 5 * 100_000

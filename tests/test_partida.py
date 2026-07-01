@@ -3,6 +3,7 @@ import pytest
 from showdomilhao.partida import (
     PREMIO_RODADA_1,
     PREMIO_RODADA_2,
+    PREMIO_RODADA_3,
     QUANTIDADE_MAXIMA_PULOS,
     Partida,
     Pergunta,
@@ -34,6 +35,10 @@ def rodada_1():
 
 def rodada_2():
     return Rodada(tuple(perguntas("R2")), premio_por_acerto=PREMIO_RODADA_2)
+
+
+def rodada_3():
+    return Rodada(tuple(perguntas("R3")), premio_por_acerto=PREMIO_RODADA_3)
 
 
 RESPOSTAS_CORRETAS = [0, 1, 2, 3, 0]
@@ -150,6 +155,26 @@ def test_parar_na_rodada_2_preserva_o_acumulado_das_duas_rodadas():
     partida.parar()
 
     assert partida.premio == 5 * PREMIO_RODADA_1 + PREMIO_RODADA_2
+    assert partida.finalizada is True
+
+
+def test_partida_encadeia_3_rodadas_ate_o_fim():
+    partida = Partida([rodada_1(), rodada_2(), rodada_3()])
+
+    for resposta in RESPOSTAS_CORRETAS * 3:
+        assert partida.responder(resposta) is True
+
+    assert partida.premio == 5 * PREMIO_RODADA_1 + 5 * PREMIO_RODADA_2 + 5 * PREMIO_RODADA_3
+    assert partida.finalizada is True
+
+
+def test_erro_na_rodada_3_reduz_pela_metade_do_acumulado_das_3_rodadas():
+    partida = Partida([rodada_1(), rodada_2(), rodada_3()])
+    for resposta in RESPOSTAS_CORRETAS * 2:
+        partida.responder(resposta)  # completa rodadas 1 e 2, premio = 55000
+
+    assert partida.responder(1) is False  # 1a da rodada 3 é índice 0, não 1
+    assert partida.premio == 27500  # metade de 55000
     assert partida.finalizada is True
 
 

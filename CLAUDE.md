@@ -9,9 +9,10 @@
 > sorteio uniforme Ás/2/3/Rei — `sortear_carta`/`escolher_eliminados` injetáveis em `Partida` pra
 > testes determinísticos) implementadas. Universitários/Placas ainda não — dependem de decisão de
 > design sobre como simular múltiplas "opiniões" de terceiros (mais complexo que 1 sorteio único).
-> Rodada 3/Pergunta do Milhão também pendentes. Regra de erro (metade do prêmio, não zero, mesmo
-> cruzando rodada) confirmada por evidência primária — ver README. Layout `src/showdomilhao/`
-> (`partida.py` = domínio, `cli.py` = interação) + testes em `tests/`.
+> Rodada 3 (R$100 mil, prêmio máximo das 3: R$555 mil) implementada — mesmo padrão de Rodada 2,
+> sem mudar lógica de domínio. Pergunta do Milhão ainda pendente. Regra de erro (metade do prêmio,
+> não zero, mesmo cruzando rodada) confirmada por evidência primária — ver README. Layout
+> `src/showdomilhao/` (`partida.py` = domínio, `cli.py` = interação) + testes em `tests/`.
 
 ## Como trabalhar aqui (resumo)
 - **Classifique antes de agir** (S-02) e roteie (S-03). Tarefa trivial → execução expressa, sem cerimônia.

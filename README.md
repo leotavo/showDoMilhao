@@ -12,16 +12,17 @@ alargando rodada por rodada (appetite pequeno a cada fatia, HITL antes de alarga
 - [x] Lógica de domínio (`src/showdomilhao/partida.py`) — `Rodada` (5 perguntas + valor por
   acerto) encadeadas numa `Partida` contínua; errar reduz o prêmio pela metade (não zera, mesmo
   cruzando de rodada) e encerra; parar preserva o prêmio e encerra.
-- [x] Rodada 1 (R$ 1 mil/acerto) e Rodada 2 (R$ 10 mil/acerto) implementadas e encadeadas.
+- [x] Rodada 1 (R$ 1 mil/acerto), Rodada 2 (R$ 10 mil/acerto) e Rodada 3 (R$ 100 mil/acerto)
+  implementadas e encadeadas — prêmio máximo das 3 rodadas: R$ 555 mil.
 - [x] Testes cobrindo os desfechos, a transição entre rodadas e casos de uso indevido
   (`tests/test_partida.py`).
-- [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — Rodada 1 + Rodada 2 jogáveis de
-  ponta a ponta pelo terminal, com testes (`tests/test_cli.py`) via injeção de entrada/saída.
+- [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — as 3 rodadas jogáveis de ponta
+  a ponta pelo terminal, com testes (`tests/test_cli.py`) via injeção de entrada/saída.
 - [x] Ajuda **Pulos** — até 3 por partida, pula a pergunta atual sem ganhar nem perder prêmio.
 - [x] Ajuda **Cartas** — uso único por partida (inferência, README não dá contagem explícita —
   ver `docs/licoes-aprendidas.md`); sorteio uniforme (25% cada) entre Ás/2/3/Rei, decisão de
   design registrada por HITL.
-- [ ] Rodada 3 e Pergunta do Milhão.
+- [ ] Pergunta do Milhão (R$ 1.000.000, parar/arriscar tudo, sem ajudas).
 - [ ] Ajudas **Universitários** e **Placas** — adiadas: dependem de simular a resposta de
   terceiros (múltiplas "opiniões", não só 1 sorteio como Cartas); decisão de design pendente.
 

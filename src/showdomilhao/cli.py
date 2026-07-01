@@ -1,6 +1,13 @@
 import sys
 
-from showdomilhao.partida import PREMIO_RODADA_1, PREMIO_RODADA_2, Partida, Pergunta, Rodada
+from showdomilhao.partida import (
+    PREMIO_RODADA_1,
+    PREMIO_RODADA_2,
+    PREMIO_RODADA_3,
+    Partida,
+    Pergunta,
+    Rodada,
+)
 
 
 def formatar_pergunta(pergunta: Pergunta, eliminadas: frozenset[int] = frozenset()) -> str:
@@ -156,10 +163,41 @@ def perguntas_padrao_rodada_2() -> tuple[Pergunta, ...]:
     )
 
 
+def perguntas_padrao_rodada_3() -> tuple[Pergunta, ...]:
+    return (
+        Pergunta(
+            "Quem escreveu a Teoria da Relatividade?",
+            ("Isaac Newton", "Albert Einstein", "Galileu Galilei", "Niels Bohr"),
+            correta=1,
+        ),
+        Pergunta(
+            "Qual é o menor país do mundo?",
+            ("Mônaco", "San Marino", "Vaticano", "Liechtenstein"),
+            correta=2,
+        ),
+        Pergunta(
+            "Quem pintou 'A Noite Estrelada'?",
+            ("Claude Monet", "Vincent van Gogh", "Salvador Dalí", "Pablo Picasso"),
+            correta=1,
+        ),
+        Pergunta(
+            "Qual é o elemento químico de símbolo 'Au'?",
+            ("Prata", "Alumínio", "Ouro", "Argônio"),
+            correta=2,
+        ),
+        Pergunta(
+            "Em que ano terminou a Segunda Guerra Mundial?",
+            ("1943", "1944", "1945", "1946"),
+            correta=2,
+        ),
+    )
+
+
 def rodadas_padrao() -> list[Rodada]:
     return [
         Rodada(perguntas_padrao_rodada_1(), premio_por_acerto=PREMIO_RODADA_1),
         Rodada(perguntas_padrao_rodada_2(), premio_por_acerto=PREMIO_RODADA_2),
+        Rodada(perguntas_padrao_rodada_3(), premio_por_acerto=PREMIO_RODADA_3),
     ]
 
 
