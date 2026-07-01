@@ -3,6 +3,7 @@
 | ADR | Título | Status | Data |
 |---|---|---|---|
 | [ADR-0001](ADR-0001-adocao-ai-smos.md) | Adoção do AI-SMOS como metodologia operacional (retrofit) | Aceito | 2026-07-01 |
+| [ADR-0002](ADR-0002-escolha-de-plataforma.md) | Escolha de plataforma/stack (abandono do Java + diagrama) | Aceito | 2026-07-01 |
 
 ## Origem → S-0x (retrofit)
 

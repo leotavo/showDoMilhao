@@ -1,8 +1,11 @@
 # showDoMilhao — instruções para o agente (AI-SMOS)
 
-> Jogo do Milhão em Java (ver `README.md` para regras e diagrama de classes). AI-SMOS adotado via
-> retrofit (ADR-0001). Build tool (Maven/Gradle) e comandos de lint/test/build ainda não definidos —
-> preencher quando o esqueleto de código for decidido.
+> Jogo do Milhão — CLI em Python (ADR-0002; ver `README.md` para as regras, fonte de domínio).
+> A stack Java e o diagrama de classes anteriores foram descartados por decisão do responsável;
+> só as regras do README permanecem vinculantes. AI-SMOS adotado via retrofit (ADR-0001).
+> Nenhum código ainda existe — comandos de lint/test/build ficam `TODO` até o Walking Skeleton
+> (new-feature playbook) escolher e instalar o ferramental real, para não afirmar capacidade
+> inexistente (S-05).
 
 ## Como trabalhar aqui (resumo)
 - **Classifique antes de agir** (S-02) e roteie (S-03). Tarefa trivial → execução expressa, sem cerimônia.
