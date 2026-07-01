@@ -115,18 +115,22 @@ def test_completar_rodada_1_avanca_para_rodada_2_sem_finalizar():
     assert partida.pergunta_atual().enunciado == "R2 1"
 
 
-def test_acerto_na_rodada_2_usa_o_incremento_da_rodada_2():
+def test_acerto_na_rodada_2_usa_a_escada_da_rodada_2_sem_somar_a_rodada_1():
+    # Confirmado pelo responsável do projeto: não é soma cumulativa entre rodadas
+    # ("os prêmios não são acumulados... é como uma escada") — cada rodada tem sua
+    # própria escada de degraus, que substitui (não soma) o valor da rodada anterior.
     partida = Partida([rodada_1(), rodada_2()])
     for resposta in RESPOSTAS_CORRETAS:
         partida.responder(resposta)  # completa a rodada 1, premio = 5000
 
     assert partida.responder(0) is True  # 1a da rodada 2, correta
-    assert partida.premio == 5 * PREMIO_RODADA_1 + PREMIO_RODADA_2
+    assert partida.premio == PREMIO_RODADA_2  # NÃO é 5*RODADA_1 + RODADA_2
 
 
-def test_erro_logo_apos_cruzar_para_rodada_2_reduz_pela_metade_do_acumulado():
-    # Confirmado pelo responsável do projeto: a regra "metade" atravessa a
-    # fronteira entre rodadas, não reseta.
+def test_erro_logo_apos_cruzar_para_rodada_2_reduz_pela_metade_do_que_ja_tinha():
+    # PARAR/ERRAR são calculados sobre o que já está garantido antes desta
+    # pergunta (aqui, ainda os 5000 da rodada 1 — a escada da rodada 2 só troca
+    # de valor quando uma pergunta DELA é respondida corretamente).
     partida = Partida([rodada_1(), rodada_2()])
     for resposta in RESPOSTAS_CORRETAS:
         partida.responder(resposta)  # completa a rodada 1, premio = 5000
@@ -142,39 +146,42 @@ def test_completar_todas_as_rodadas_finaliza_partida():
     for resposta in RESPOSTAS_CORRETAS * 2:
         assert partida.responder(resposta) is True
 
-    assert partida.premio == 5 * PREMIO_RODADA_1 + 5 * PREMIO_RODADA_2
+    assert partida.premio == 5 * PREMIO_RODADA_2  # escada da rodada 2, não soma da 1
     assert partida.finalizada is True
 
 
-def test_parar_na_rodada_2_preserva_o_acumulado_das_duas_rodadas():
+def test_parar_na_rodada_2_preserva_o_valor_da_escada_da_rodada_2():
     partida = Partida([rodada_1(), rodada_2()])
     for resposta in RESPOSTAS_CORRETAS:
         partida.responder(resposta)  # completa a rodada 1, premio = 5000
-    partida.responder(0)  # 1a da rodada 2, premio = 15000
+    partida.responder(0)  # 1a da rodada 2, premio = 10000 (troca, não soma)
 
     partida.parar()
 
-    assert partida.premio == 5 * PREMIO_RODADA_1 + PREMIO_RODADA_2
+    assert partida.premio == PREMIO_RODADA_2
     assert partida.finalizada is True
 
 
 def test_partida_encadeia_3_rodadas_ate_o_fim():
+    # A escada da Rodada 3 completa dá exatamente R$500 mil — o mesmo valor de
+    # "parar" já documentado no README pra Pergunta do Milhão. Não é coincidência:
+    # é a mesma escada continuando.
     partida = Partida([rodada_1(), rodada_2(), rodada_3()])
 
     for resposta in RESPOSTAS_CORRETAS * 3:
         assert partida.responder(resposta) is True
 
-    assert partida.premio == 5 * PREMIO_RODADA_1 + 5 * PREMIO_RODADA_2 + 5 * PREMIO_RODADA_3
+    assert partida.premio == 5 * PREMIO_RODADA_3
     assert partida.finalizada is True
 
 
-def test_erro_na_rodada_3_reduz_pela_metade_do_acumulado_das_3_rodadas():
+def test_erro_na_rodada_3_reduz_pela_metade_do_valor_da_escada_da_rodada_2():
     partida = Partida([rodada_1(), rodada_2(), rodada_3()])
     for resposta in RESPOSTAS_CORRETAS * 2:
-        partida.responder(resposta)  # completa rodadas 1 e 2, premio = 55000
+        partida.responder(resposta)  # completa rodadas 1 e 2, premio = 5*RODADA_2 = 50000
 
     assert partida.responder(1) is False  # 1a da rodada 3 é índice 0, não 1
-    assert partida.premio == 27500  # metade de 55000
+    assert partida.premio == 25000  # metade de 50000
     assert partida.finalizada is True
 
 
@@ -196,6 +203,17 @@ def test_pular_avanca_pergunta_sem_alterar_o_premio():
     assert partida.premio == PREMIO_RODADA_1  # não ganhou nem perdeu
     assert partida.pergunta_atual().enunciado == "R1 3"
     assert partida.finalizada is False
+
+
+def test_pular_antes_de_acertar_nao_infla_o_degrau_da_escada():
+    # pular() avança _indice_pergunta sem contar como acerto — a escada tem que
+    # subir pela quantidade de ACERTOS na rodada, não pela posição na sequência
+    # de perguntas (que pular também avança).
+    partida = Partida([rodada_1()])
+    partida.pular()  # pula a 1a, ainda 0 acertos
+
+    assert partida.responder(1) is True  # acerta a 2a (correta=1)
+    assert partida.premio == PREMIO_RODADA_1  # 1º acerto da rodada, não o 2º degrau
 
 
 def test_pular_reduz_pulos_restantes():

@@ -269,7 +269,7 @@ def test_jogar_atravessa_rodada_1_para_rodada_2_sem_interrupcao():
     jogar(partida, entrada=entrada, saida=saida)
 
     assert partida.finalizada is True
-    assert partida.premio == 5_000 + 5 * 10_000
+    assert partida.premio == 5 * 10_000  # escada da rodada 2, não soma com a rodada 1
     assert any("Pergunta R2-1" in linha for linha in linhas)  # provou que cruzou a fronteira
 
 
@@ -286,4 +286,4 @@ def test_jogar_completa_as_3_rodadas_padrao_com_premio_maximo():
     jogar(partida, entrada=entrada, saida=saida)
 
     assert partida.finalizada is True
-    assert partida.premio == 5_000 + 5 * 10_000 + 5 * 100_000
+    assert partida.premio == 5 * 100_000  # escada da rodada 3 = R$500 mil

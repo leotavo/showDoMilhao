@@ -70,6 +70,7 @@ class Partida:
         self._rodadas = tuple(rodadas)  # cópia defensiva: imune a mutação externa da lista original
         self._indice_rodada = 0
         self._indice_pergunta = 0
+        self._acertos_na_rodada = 0  # degrau da escada; pular() NÃO conta aqui
         self.premio = 0
         self.finalizada = False
         self.pulos_restantes = QUANTIDADE_MAXIMA_PULOS
@@ -86,6 +87,7 @@ class Partida:
         if self._indice_pergunta == len(rodada.perguntas):
             self._indice_pergunta = 0
             self._indice_rodada += 1
+            self._acertos_na_rodada = 0  # nova rodada, escada reinicia do degrau 0
             if self._indice_rodada == len(self._rodadas):
                 self.finalizada = True
 
@@ -108,13 +110,22 @@ class Partida:
 
         acertou = indice_alternativa == pergunta.correta
         if acertou:
-            self.premio += rodada.premio_por_acerto
+            # Escada, não soma cumulativa entre rodadas (confirmado pelo responsável
+            # do projeto): o prêmio é o degrau da rodada ATUAL — troca, não soma, o
+            # valor deixado pela rodada anterior. Dentro de uma mesma rodada isso dá
+            # a mesma sequência que uma soma cumulativa (1000, 2000, ...), por isso
+            # só é observável na fronteira entre rodadas. Consistente com o README:
+            # completar a Rodada 3 dá exatamente R$500 mil, igual ao valor de "parar"
+            # já documentado pra Pergunta do Milhão. O degrau é a contagem de ACERTOS
+            # na rodada — não a posição na sequência de perguntas, que pular() também
+            # avança sem contar como acerto.
+            self._acertos_na_rodada += 1
+            self.premio = self._acertos_na_rodada * rodada.premio_por_acerto
             self._avancar_pergunta()
         else:
             # Errar não zera: cai pra metade do que já estava garantido (PARAR).
-            # Regra atravessa a fronteira entre rodadas (confirmado pelo responsável
-            # do projeto). Confirmado por evidência primária dentro de uma rodada
-            # (captura de tela do programa real, 4 pontos de dado consistentes):
+            # Confirmado por evidência primária dentro de uma rodada (captura de
+            # tela do programa real, 4 pontos de dado consistentes):
             # https://www.youtube.com/watch?v=tPJD9Qo4EN8
             self.premio = self.premio // 2
             self.finalizada = True

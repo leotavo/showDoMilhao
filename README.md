@@ -10,10 +10,12 @@ Em andamento: Walking Skeleton ([ADR-0002](docs/decisions/ADR-0002-escolha-de-pl
 alargando rodada por rodada (appetite pequeno a cada fatia, HITL antes de alargar).
 
 - [x] Lógica de domínio (`src/showdomilhao/partida.py`) — `Rodada` (5 perguntas + valor por
-  acerto) encadeadas numa `Partida` contínua; errar reduz o prêmio pela metade (não zera, mesmo
-  cruzando de rodada) e encerra; parar preserva o prêmio e encerra.
+  acerto) encadeadas numa `Partida` contínua, cada uma com sua própria escada de prêmios (não
+  soma com a rodada anterior — ver nota em Regras); errar reduz o prêmio pela metade do que já
+  estava garantido (não zera) e encerra; parar preserva o prêmio e encerra.
 - [x] Rodada 1 (R$ 1 mil/acerto), Rodada 2 (R$ 10 mil/acerto) e Rodada 3 (R$ 100 mil/acerto)
-  implementadas e encadeadas — prêmio máximo das 3 rodadas: R$ 555 mil.
+  implementadas e encadeadas — completar a Rodada 3 dá R$ 500 mil (mesmo valor de "parar" da
+  Pergunta do Milhão, não R$ 555 mil).
 - [x] Testes cobrindo os desfechos, a transição entre rodadas e casos de uso indevido
   (`tests/test_partida.py`).
 - [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — as 3 rodadas jogáveis de ponta
@@ -47,6 +49,16 @@ Rodada 2: cada acerto soma R$ 10 mil (cumulativo).
 Rodada 3: cada acerto soma R$ 100 mil (cumulativo).
 
 Pergunta do Milhão: vale R$ 1.000.000. Há tabela de “parar” e “errar” em cada nível; na final, parar = R$ 500 mil e errar = R$ 0. 
+
+> Confirmado pelo responsável do projeto: "cumulativo" vale **dentro** de cada rodada, não entre
+> rodadas — é uma escada, não uma soma corrida. Ao entrar numa rodada nova, o prêmio passa a
+> refletir o degrau daquela rodada (1×, 2×, 3×... o valor por acerto dela), substituindo — não
+> somando com — o valor da rodada anterior. Assim, completar a Rodada 1 dá R$ 5 mil; errar a 1ª
+> pergunta da Rodada 2 logo em seguida cai pela metade **desses R$ 5 mil** (R$ 2.500, já que esse
+> ainda é o valor de "parar" até a 1ª pergunta da Rodada 2 ser respondida); mas acertar essa
+> pergunta troca o prêmio pra R$ 10 mil (o 1º degrau da Rodada 2), não R$ 15 mil. Completar a
+> Rodada 3 dá R$ 500 mil — o mesmo valor de "parar" da Pergunta do Milhão acima, confirmando que é
+> a mesma escada continuando.
 
 > Confirmado por evidência primária (captura de tela do programa,
 > [vídeo](https://www.youtube.com/watch?v=tPJD9Qo4EN8), 4 quadros consistentes): em cada pergunta,
