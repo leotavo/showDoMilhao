@@ -1,6 +1,13 @@
 import pytest
 
-from showdomilhao.partida import PREMIO_RODADA_1, PREMIO_RODADA_2, Partida, Pergunta, Rodada
+from showdomilhao.partida import (
+    PREMIO_RODADA_1,
+    PREMIO_RODADA_2,
+    QUANTIDADE_MAXIMA_PULOS,
+    Partida,
+    Pergunta,
+    Rodada,
+)
 
 
 def perguntas(prefixo="Pergunta"):
@@ -136,6 +143,77 @@ def test_parar_na_rodada_2_preserva_o_acumulado_das_duas_rodadas():
 
     assert partida.premio == 5 * PREMIO_RODADA_1 + PREMIO_RODADA_2
     assert partida.finalizada is True
+
+
+# --- ajuda: Pulos -------------------------------------------------------------
+
+
+def test_partida_comeca_com_o_maximo_de_pulos():
+    partida = Partida([rodada_1()])
+
+    assert partida.pulos_restantes == QUANTIDADE_MAXIMA_PULOS
+
+
+def test_pular_avanca_pergunta_sem_alterar_o_premio():
+    partida = Partida([rodada_1()])
+    partida.responder(0)  # acerta a 1a, premio = 1000
+
+    partida.pular()
+
+    assert partida.premio == PREMIO_RODADA_1  # não ganhou nem perdeu
+    assert partida.pergunta_atual().enunciado == "R1 3"
+    assert partida.finalizada is False
+
+
+def test_pular_reduz_pulos_restantes():
+    partida = Partida([rodada_1()])
+
+    partida.pular()
+
+    assert partida.pulos_restantes == QUANTIDADE_MAXIMA_PULOS - 1
+
+
+def test_pular_sem_pulos_restantes_levanta_erro():
+    partida = Partida([rodada_1()])
+    for _ in range(QUANTIDADE_MAXIMA_PULOS):
+        partida.pular()
+
+    assert partida.pulos_restantes == 0
+    with pytest.raises(RuntimeError):
+        partida.pular()
+
+
+def test_pular_atravessa_fronteira_de_rodada():
+    # QUANTIDADE_MAXIMA_PULOS (3) < QUANTIDADE_PERGUNTAS_POR_RODADA (5): responde
+    # certo as 2 primeiras e pula as 3 últimas (todo o orçamento de pulos) pra
+    # cruzar a fronteira sem estourar o limite.
+    partida = Partida([rodada_1(), rodada_2()])
+    partida.responder(RESPOSTAS_CORRETAS[0])
+    partida.responder(RESPOSTAS_CORRETAS[1])
+    for _ in range(QUANTIDADE_MAXIMA_PULOS):
+        partida.pular()
+
+    assert partida.finalizada is False
+    assert partida.pulos_restantes == 0
+    assert partida.pergunta_atual().enunciado == "R2 1"
+
+
+def test_pular_a_ultima_pergunta_da_ultima_rodada_finaliza_partida():
+    partida = Partida([rodada_1()])
+    for resposta in RESPOSTAS_CORRETAS[:4]:
+        partida.responder(resposta)  # responde certo as 4 primeiras, chega na 5a
+
+    partida.pular()  # pula a 5a e última pergunta da única rodada
+
+    assert partida.finalizada is True
+
+
+def test_pular_apos_finalizada_levanta_erro():
+    partida = Partida([rodada_1()])
+    partida.parar()
+
+    with pytest.raises(RuntimeError):
+        partida.pular()
 
 
 # --- guardas contra uso indevido pós-finalização ----------------------------

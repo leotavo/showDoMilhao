@@ -4,6 +4,7 @@ PREMIO_RODADA_1 = 1000
 PREMIO_RODADA_2 = 10000
 QUANTIDADE_PERGUNTAS_POR_RODADA = 5
 QUANTIDADE_ALTERNATIVAS = 4
+QUANTIDADE_MAXIMA_PULOS = 3
 
 
 @dataclass(frozen=True)
@@ -53,9 +54,19 @@ class Partida:
         self._indice_pergunta = 0
         self.premio = 0
         self.finalizada = False
+        self.pulos_restantes = QUANTIDADE_MAXIMA_PULOS
 
     def _rodada_atual(self) -> Rodada:
         return self._rodadas[self._indice_rodada]
+
+    def _avancar_pergunta(self) -> None:
+        rodada = self._rodada_atual()
+        self._indice_pergunta += 1
+        if self._indice_pergunta == len(rodada.perguntas):
+            self._indice_pergunta = 0
+            self._indice_rodada += 1
+            if self._indice_rodada == len(self._rodadas):
+                self.finalizada = True
 
     def pergunta_atual(self) -> Pergunta:
         if self.finalizada:
@@ -77,12 +88,7 @@ class Partida:
         acertou = indice_alternativa == pergunta.correta
         if acertou:
             self.premio += rodada.premio_por_acerto
-            self._indice_pergunta += 1
-            if self._indice_pergunta == len(rodada.perguntas):
-                self._indice_pergunta = 0
-                self._indice_rodada += 1
-                if self._indice_rodada == len(self._rodadas):
-                    self.finalizada = True
+            self._avancar_pergunta()
         else:
             # Errar não zera: cai pra metade do que já estava garantido (PARAR).
             # Regra atravessa a fronteira entre rodadas (confirmado pelo responsável
@@ -98,3 +104,12 @@ class Partida:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
         self.finalizada = True
+
+    def pular(self) -> None:
+        if self.finalizada:
+            raise RuntimeError("Partida já finalizada.")
+        if self.pulos_restantes <= 0:
+            raise RuntimeError("Sem pulos restantes.")
+
+        self.pulos_restantes -= 1
+        self._avancar_pergunta()

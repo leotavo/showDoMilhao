@@ -23,6 +23,9 @@ def interpretar_entrada(texto: str, quantidade_alternativas: int) -> int | str |
     if normalizado in ("parar", "p"):
         return "parar"
 
+    if normalizado in ("pular", "pu"):
+        return "pular"
+
     if len(normalizado) == 1 and normalizado.isalpha():
         indice = ord(normalizado) - ord("a")
         return indice if 0 <= indice < quantidade_alternativas else None
@@ -40,7 +43,9 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
         saida(formatar_pergunta(pergunta))
 
         try:
-            texto = entrada("Responda (A-D) ou digite 'parar': ")
+            texto = entrada(
+                f"Responda (A-D), 'parar' ou 'pular' ({partida.pulos_restantes} restantes): "
+            )
         except EOFError:
             saida("Entrada encerrada. Encerrando o jogo.")
             partida.parar()
@@ -55,6 +60,14 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
         if comando == "parar":
             partida.parar()
             break
+
+        if comando == "pular":
+            if partida.pulos_restantes <= 0:
+                saida("Sem pulos restantes, responda ou digite 'parar'.")
+                continue
+            partida.pular()
+            saida(f"Pulou! Pulos restantes: {partida.pulos_restantes}")
+            continue
 
         acertou = partida.responder(comando)
         saida(formatar_resultado(acertou, partida.premio))

@@ -84,6 +84,12 @@ def test_interpretar_entrada_com_digito_nao_decimal_nao_lanca_excecao():
     assert interpretar_entrada("²", 4) is None
 
 
+def test_interpretar_entrada_aceita_pular_case_insensitive():
+    assert interpretar_entrada("pular", 4) == "pular"
+    assert interpretar_entrada("PULAR", 4) == "pular"
+    assert interpretar_entrada("pu", 4) == "pular"
+
+
 # --- jogar (loop com entrada/saida injetadas, sem tocar input()/print() reais) ---
 
 
@@ -150,6 +156,34 @@ def test_jogar_com_entrada_invalida_pede_de_novo_sem_avancar():
     assert partida.finalizada is True
     assert partida.premio == 5000
     assert any("inválida" in linha.lower() for linha in linhas)
+
+
+def test_jogar_com_pular_avanca_sem_responder_e_sem_gastar_premio():
+    partida = partida_uma_rodada()
+    entrada = entrada_fake(["pular", "B", "C", "D", "A"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 4000  # 4 acertos, 1 pergunta pulada (sem prêmio nem perda)
+    assert partida.pulos_restantes == 2
+    assert any("pulou" in linha.lower() for linha in linhas)
+
+
+def test_jogar_com_pulos_esgotados_trata_como_invalido_sem_crashar():
+    # Gasta os 3 pulos (chega na pergunta 4), tenta um 4º pulo (deve ser recusado
+    # sem lançar exceção nem consumir a pergunta atual), depois termina a rodada.
+    partida = partida_uma_rodada()
+    entrada = entrada_fake(["pular", "pular", "pular", "pular", "D", "A"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 2000  # só as 2 respostas certas (D, A) valeram prêmio
+    assert partida.pulos_restantes == 0
+    assert any("sem pulos" in linha.lower() for linha in linhas)
 
 
 def test_jogar_atravessa_rodada_1_para_rodada_2_sem_interrupcao():
