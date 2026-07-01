@@ -26,11 +26,25 @@ def test_responder_correto_soma_premio_cumulativo():
     assert partida.premio == 2 * PREMIO_POR_ACERTO_RODADA_1
 
 
-def test_responder_errado_zera_premio_e_encerra():
+def test_responder_errado_reduz_premio_pela_metade_e_encerra():
+    # Regra confirmada por evidência primária (captura de tela do programa real,
+    # 4 pontos de dado consistentes): ERRAR = PARAR / 2, não zero.
+    # https://www.youtube.com/watch?v=tPJD9Qo4EN8 (3:08, 3:29, 4:04 e um quadro anterior)
     partida = Partida(perguntas_rodada_1())
     partida.responder(0)  # acerta a 1a, premio = 1000
+    partida.responder(1)  # acerta a 2a, premio = 2000
 
-    assert partida.responder(0) is False  # a 2a correta é índice 1, não 0
+    assert partida.responder(0) is False  # a 3a correta é índice 2, não 0
+    assert partida.premio == 1000  # metade dos 2000 que já tinha garantido
+    assert partida.finalizada is True
+
+
+def test_responder_errado_na_primeira_pergunta_zera_o_premio():
+    # Caso-limite do mesmo cálculo: antes da 1a pergunta o "PARAR" vale 0,
+    # então ERRAR = 0 / 2 = 0 — não é uma regra separada, é a mesma fórmula.
+    partida = Partida(perguntas_rodada_1())
+
+    assert partida.responder(1) is False  # a 1a correta é índice 0, não 1
     assert partida.premio == 0
     assert partida.finalizada is True
 

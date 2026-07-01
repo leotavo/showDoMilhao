@@ -61,7 +61,10 @@ class Partida:
             if self._indice_atual == len(self._perguntas):
                 self.finalizada = True
         else:
-            self.premio = 0
+            # Errar não zera: cai pra metade do que já estava garantido (PARAR).
+            # Confirmado por evidência primária (captura de tela do programa real,
+            # 4 pontos de dado consistentes): https://www.youtube.com/watch?v=tPJD9Qo4EN8
+            self.premio = self.premio // 2
             self.finalizada = True
 
         return acertou

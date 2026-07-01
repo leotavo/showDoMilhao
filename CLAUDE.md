@@ -3,9 +3,10 @@
 > Jogo do Milhão — CLI em Python (ADR-0002; ver `README.md` para as regras, fonte de domínio).
 > A stack Java e o diagrama de classes anteriores foram descartados por decisão do responsável;
 > só as regras do README permanecem vinculantes. AI-SMOS adotado via retrofit (ADR-0001).
-> Walking Skeleton em andamento (appetite pequeno, aprovado via HITL): cobre só a Rodada 1,
-> sem ajudas, sem tabela de segurança (lacuna do README — ver `docs/decisions/ADR-0002...md`).
-> Layout `src/` (`src/showdomilhao/`) + testes em `tests/`, ainda sem `main.py`/interação real.
+> Walking Skeleton completo (DB→lógica→UI) pra Rodada 1, jogável via `python -m showdomilhao`
+> (`PYTHONPATH=src`): cobre só a Rodada 1, sem ajudas, sem Rodada 2/3. Regra de erro (metade do
+> prêmio, não zero) confirmada por evidência primária — ver README. Layout `src/showdomilhao/`
+> (`partida.py` = domínio, `cli.py` = interação) + testes em `tests/`.
 
 ## Como trabalhar aqui (resumo)
 - **Classifique antes de agir** (S-02) e roteie (S-03). Tarefa trivial → execução expressa, sem cerimônia.
@@ -17,7 +18,8 @@
 ## Comandos do projeto
 - Lint: `python -m ruff check .`
 - Teste: `python -m pytest`
-- Build: n/a — ainda não há empacotamento (sem `main.py`, sem distribuição); revisitar quando existir.
+- Rodar: `PYTHONPATH=src python -m showdomilhao`
+- Build: n/a — ainda não há empacotamento/distribuição; revisitar quando existir.
 
 ## Playbooks (invocar por classe)
 new-feature · bugfix · refactor · research · architecture-decision · code-review
