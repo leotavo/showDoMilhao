@@ -1,5 +1,5 @@
 from showdomilhao.cli import formatar_pergunta, formatar_resultado, interpretar_entrada, jogar
-from showdomilhao.partida import Partida, Pergunta
+from showdomilhao.partida import PREMIO_RODADA_1, Partida, Pergunta, Rodada
 
 
 def perguntas_rodada_1():
@@ -10,6 +10,10 @@ def perguntas_rodada_1():
         Pergunta("Pergunta 4", ("A", "B", "C", "D"), correta=3),
         Pergunta("Pergunta 5", ("A", "B", "C", "D"), correta=0),
     ]
+
+
+def partida_uma_rodada():
+    return Partida([Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1)])
 
 
 def entrada_fake(respostas):
@@ -84,7 +88,7 @@ def test_interpretar_entrada_com_digito_nao_decimal_nao_lanca_excecao():
 
 
 def test_jogar_com_todas_respostas_corretas_termina_com_premio_maximo():
-    partida = Partida(perguntas_rodada_1())
+    partida = partida_uma_rodada()
     entrada = entrada_fake(["A", "B", "C", "D", "A"])
     linhas, saida = saida_fake()
 
@@ -96,7 +100,7 @@ def test_jogar_com_todas_respostas_corretas_termina_com_premio_maximo():
 
 
 def test_jogar_para_no_meio_preserva_premio():
-    partida = Partida(perguntas_rodada_1())
+    partida = partida_uma_rodada()
     entrada = entrada_fake(["A", "B", "parar"])
     linhas, saida = saida_fake()
 
@@ -107,7 +111,7 @@ def test_jogar_para_no_meio_preserva_premio():
 
 
 def test_jogar_erra_reduz_premio_pela_metade_e_encerra():
-    partida = Partida(perguntas_rodada_1())
+    partida = partida_uma_rodada()
     entrada = entrada_fake(["A", "B", "A"])  # erra a 3a (correta é C/índice 2)
     linhas, saida = saida_fake()
 
@@ -120,7 +124,7 @@ def test_jogar_erra_reduz_premio_pela_metade_e_encerra():
 def test_jogar_com_eof_na_entrada_encerra_sem_lancar_excecao():
     # input() real levanta EOFError quando o stdin fecha (Ctrl+D, pipe que acaba).
     # jogar() precisa terminar graciosamente, não deixar a exceção propagar.
-    partida = Partida(perguntas_rodada_1())
+    partida = partida_uma_rodada()
     entrada = entrada_fake(["A"])  # só 1 resposta na fila; a 2a chamada estoura EOFError
     linhas, saida = saida_fake()
 
@@ -137,7 +141,7 @@ def test_jogar_com_eof_na_entrada_encerra_sem_lancar_excecao():
 
 
 def test_jogar_com_entrada_invalida_pede_de_novo_sem_avancar():
-    partida = Partida(perguntas_rodada_1())
+    partida = partida_uma_rodada()
     entrada = entrada_fake(["xyz", "A", "B", "C", "D", "A"])
     linhas, saida = saida_fake()
 
@@ -146,3 +150,27 @@ def test_jogar_com_entrada_invalida_pede_de_novo_sem_avancar():
     assert partida.finalizada is True
     assert partida.premio == 5000
     assert any("inválida" in linha.lower() for linha in linhas)
+
+
+def test_jogar_atravessa_rodada_1_para_rodada_2_sem_interrupcao():
+    perguntas_r2 = [
+        Pergunta("Pergunta R2-1", ("A", "B", "C", "D"), correta=1),
+        Pergunta("Pergunta R2-2", ("A", "B", "C", "D"), correta=2),
+        Pergunta("Pergunta R2-3", ("A", "B", "C", "D"), correta=3),
+        Pergunta("Pergunta R2-4", ("A", "B", "C", "D"), correta=0),
+        Pergunta("Pergunta R2-5", ("A", "B", "C", "D"), correta=1),
+    ]
+    partida = Partida(
+        [
+            Rodada(tuple(perguntas_rodada_1()), premio_por_acerto=PREMIO_RODADA_1),
+            Rodada(tuple(perguntas_r2), premio_por_acerto=10_000),
+        ]
+    )
+    entrada = entrada_fake(["A", "B", "C", "D", "A", "B", "C", "D", "A", "B"])
+    linhas, saida = saida_fake()
+
+    jogar(partida, entrada=entrada, saida=saida)
+
+    assert partida.finalizada is True
+    assert partida.premio == 5_000 + 5 * 10_000
+    assert any("Pergunta R2-1" in linha for linha in linhas)  # provou que cruzou a fronteira

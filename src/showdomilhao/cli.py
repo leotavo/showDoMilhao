@@ -1,6 +1,6 @@
 import sys
 
-from showdomilhao.partida import Partida, Pergunta
+from showdomilhao.partida import PREMIO_RODADA_1, PREMIO_RODADA_2, Partida, Pergunta, Rodada
 
 
 def formatar_pergunta(pergunta: Pergunta) -> str:
@@ -62,8 +62,8 @@ def jogar(partida: Partida, entrada=input, saida=print) -> None:
     saida(f"Fim de jogo. Prêmio final: R$ {partida.premio}")
 
 
-def perguntas_padrao_rodada_1() -> list[Pergunta]:
-    return [
+def perguntas_padrao_rodada_1() -> tuple[Pergunta, ...]:
+    return (
         Pergunta(
             "Qual é a capital do Brasil?",
             ("Rio de Janeiro", "Brasília", "São Paulo", "Salvador"),
@@ -85,6 +85,43 @@ def perguntas_padrao_rodada_1() -> list[Pergunta]:
             ("1965", "1969", "1972", "1959"),
             correta=1,
         ),
+    )
+
+
+def perguntas_padrao_rodada_2() -> tuple[Pergunta, ...]:
+    return (
+        Pergunta(
+            "Quem escreveu 'Dom Casmurro'?",
+            ("José de Alencar", "Machado de Assis", "Graciliano Ramos", "Clarice Lispector"),
+            correta=1,
+        ),
+        Pergunta(
+            "Qual é o maior oceano do mundo?",
+            ("Atlântico", "Índico", "Ártico", "Pacífico"),
+            correta=3,
+        ),
+        Pergunta(
+            "Em que continente fica o Egito?",
+            ("Ásia", "África", "Europa", "Oceania"),
+            correta=1,
+        ),
+        Pergunta(
+            "Quantos lados tem um hexágono?",
+            ("5", "6", "7", "8"),
+            correta=1,
+        ),
+        Pergunta(
+            "Quem foi o primeiro presidente do Brasil?",
+            ("Getúlio Vargas", "Dom Pedro II", "Deodoro da Fonseca", "Juscelino Kubitschek"),
+            correta=2,
+        ),
+    )
+
+
+def rodadas_padrao() -> list[Rodada]:
+    return [
+        Rodada(perguntas_padrao_rodada_1(), premio_por_acerto=PREMIO_RODADA_1),
+        Rodada(perguntas_padrao_rodada_2(), premio_por_acerto=PREMIO_RODADA_2),
     ]
 
 
@@ -96,4 +133,4 @@ def main() -> None:
     if hasattr(sys.stdin, "reconfigure"):
         sys.stdin.reconfigure(encoding="utf-8")
 
-    jogar(Partida(perguntas_padrao_rodada_1()))
+    jogar(Partida(rodadas_padrao()))

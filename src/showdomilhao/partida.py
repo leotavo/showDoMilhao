@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
-PREMIO_POR_ACERTO_RODADA_1 = 1000
-QUANTIDADE_PERGUNTAS_RODADA_1 = 5
+PREMIO_RODADA_1 = 1000
+PREMIO_RODADA_2 = 10000
+QUANTIDADE_PERGUNTAS_POR_RODADA = 5
 QUANTIDADE_ALTERNATIVAS = 4
 
 
@@ -24,29 +25,48 @@ class Pergunta:
             )
 
 
-class Partida:
-    """Walking skeleton: cobre só a Rodada 1 (ADR-0002, appetite pequeno)."""
+@dataclass(frozen=True)
+class Rodada:
+    perguntas: tuple[Pergunta, ...]
+    premio_por_acerto: int
 
-    def __init__(self, perguntas: list[Pergunta]):
-        if len(perguntas) != QUANTIDADE_PERGUNTAS_RODADA_1:
+    def __post_init__(self):
+        if len(self.perguntas) != QUANTIDADE_PERGUNTAS_POR_RODADA:
             raise ValueError(
-                f"Rodada 1 exige {QUANTIDADE_PERGUNTAS_RODADA_1} perguntas, "
-                f"recebeu {len(perguntas)}."
+                f"Rodada exige {QUANTIDADE_PERGUNTAS_POR_RODADA} perguntas, "
+                f"recebeu {len(self.perguntas)}."
             )
-        self._perguntas = tuple(perguntas)  # cópia defensiva: imune a mutação externa da lista original
-        self._indice_atual = 0
+        if self.premio_por_acerto <= 0:
+            raise ValueError(
+                f"premio_por_acerto deve ser positivo, recebeu {self.premio_por_acerto}."
+            )
+
+
+class Partida:
+    """Walking skeleton: rodadas encadeadas numa única partida contínua (ADR-0002)."""
+
+    def __init__(self, rodadas: list[Rodada]):
+        if not rodadas:
+            raise ValueError("Partida exige ao menos 1 rodada.")
+        self._rodadas = tuple(rodadas)  # cópia defensiva: imune a mutação externa da lista original
+        self._indice_rodada = 0
+        self._indice_pergunta = 0
         self.premio = 0
         self.finalizada = False
+
+    def _rodada_atual(self) -> Rodada:
+        return self._rodadas[self._indice_rodada]
 
     def pergunta_atual(self) -> Pergunta:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
-        return self._perguntas[self._indice_atual]
+        return self._rodada_atual().perguntas[self._indice_pergunta]
 
     def responder(self, indice_alternativa: int) -> bool:
         if self.finalizada:
             raise RuntimeError("Partida já finalizada.")
 
+        rodada = self._rodada_atual()
         pergunta = self.pergunta_atual()
         if not 0 <= indice_alternativa < len(pergunta.alternativas):
             raise ValueError(
@@ -56,14 +76,19 @@ class Partida:
 
         acertou = indice_alternativa == pergunta.correta
         if acertou:
-            self.premio += PREMIO_POR_ACERTO_RODADA_1
-            self._indice_atual += 1
-            if self._indice_atual == len(self._perguntas):
-                self.finalizada = True
+            self.premio += rodada.premio_por_acerto
+            self._indice_pergunta += 1
+            if self._indice_pergunta == len(rodada.perguntas):
+                self._indice_pergunta = 0
+                self._indice_rodada += 1
+                if self._indice_rodada == len(self._rodadas):
+                    self.finalizada = True
         else:
             # Errar não zera: cai pra metade do que já estava garantido (PARAR).
-            # Confirmado por evidência primária (captura de tela do programa real,
-            # 4 pontos de dado consistentes): https://www.youtube.com/watch?v=tPJD9Qo4EN8
+            # Regra atravessa a fronteira entre rodadas (confirmado pelo responsável
+            # do projeto). Confirmado por evidência primária dentro de uma rodada
+            # (captura de tela do programa real, 4 pontos de dado consistentes):
+            # https://www.youtube.com/watch?v=tPJD9Qo4EN8
             self.premio = self.premio // 2
             self.finalizada = True
 

@@ -6,15 +6,18 @@ acompanhava este README foram descartados; ver [ADR-0002](docs/decisions/ADR-000
 ## Status do projeto
 
 Metodologia [AI-SMOS](CLAUDE.md) adotada via retrofit ([ADR-0001](docs/decisions/ADR-0001-adocao-ai-smos.md)).
-Em andamento: Walking Skeleton da Rodada 1 ([ADR-0002](docs/decisions/ADR-0002-escolha-de-plataforma.md), appetite pequeno).
+Em andamento: Walking Skeleton ([ADR-0002](docs/decisions/ADR-0002-escolha-de-plataforma.md)),
+alargando rodada por rodada (appetite pequeno a cada fatia, HITL antes de alargar).
 
-- [x] Lógica de domínio da Rodada 1 (`src/showdomilhao/partida.py`) — 5 perguntas, prêmio
-  cumulativo de R$ 1 mil por acerto; errar reduz o prêmio pela metade (não zera) e encerra;
-  parar preserva o prêmio e encerra.
-- [x] Testes cobrindo os três desfechos e casos de uso indevido (`tests/test_partida.py`).
-- [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — Rodada 1 jogável de ponta a
-  ponta pelo terminal, com testes (`tests/test_cli.py`) via injeção de entrada/saída.
-- [ ] Rodada 2, Rodada 3 e Pergunta do Milhão.
+- [x] Lógica de domínio (`src/showdomilhao/partida.py`) — `Rodada` (5 perguntas + valor por
+  acerto) encadeadas numa `Partida` contínua; errar reduz o prêmio pela metade (não zera, mesmo
+  cruzando de rodada) e encerra; parar preserva o prêmio e encerra.
+- [x] Rodada 1 (R$ 1 mil/acerto) e Rodada 2 (R$ 10 mil/acerto) implementadas e encadeadas.
+- [x] Testes cobrindo os desfechos, a transição entre rodadas e casos de uso indevido
+  (`tests/test_partida.py`).
+- [x] Interface de linha de comando (`src/showdomilhao/cli.py`) — Rodada 1 + Rodada 2 jogáveis de
+  ponta a ponta pelo terminal, com testes (`tests/test_cli.py`) via injeção de entrada/saída.
+- [ ] Rodada 3 e Pergunta do Milhão.
 - [ ] As 4 ajudas (Universitários, Placas, Cartas, Pulos).
 
 Rodar o jogo: `PYTHONPATH=src python -m showdomilhao`
